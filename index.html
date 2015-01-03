@@ -42,6 +42,10 @@
 							<div class="panel-body">
 								<label>
 									<input type="checkbox" id="tower-type-show-faction" /> Show Faction Towers?
+								</label><br />
+
+								<label>
+									<input type="checkbox" id="tower-type-sov" /> Enable Sov Fuel Bonus?
 								</label>
 							</div>
 						</div>
@@ -134,15 +138,49 @@
 							</tfoot>
 						</table>
 						<div class="well">
+							<h4 style="margin-top: 0; margin-bottom: 20px;">Fuel Selector</h4>
+							<dl class="dl-horizontal">
+								<dt style="width: 256px;"><span style="margin-right:30px"><strong>Calculation Duration:</strong> <span id="tower-fuel-interval-text">Hours</span></span></dt>
+								<dd><input id="tower-fuel-interval" data-slider-id='tower-fuel-interval-slider' type="text" data-slider-value="1" /> </dd><br /><br />
+
+								<dt style="width: 256px;"><span style="margin-right:30px"><strong>Fuel Amount:</strong> <span id="tower-fuel-value-text">1 Hour</span></span></dt>
+								<dd><input id="tower-fuel-value" data-slider-id='tower-fuel-value-slider' type="text" data-slider-value="1" /></dd><br /><br />
+
+								<dt style="width: 256px;"><span style="margin-right:30px"><strong>Reinforce Duration:</strong> <span id="tower-stront-timer-text">1 Hour</span></span></dt>
+								<dd><input id="tower-stront-timer" data-slider-id='tower-stront-timer-slider' type="text" data-slider-value="1" /> </dd>
+
+							</dl>
+						</div>
+						<style>
+							#tower-fuel-interval-slider .slider-selection, #tower-fuel-value-slider .slider-selection, #tower-stront-timer-slider .slider-selection {
+								background: #BABABA;
+							}
+							#tower-fuel-interval-slider .slider-track, #tower-fuel-value-slider .slider-track, #tower-stront-timer-slider .slider-track {
+								border: 1px solid #ccc;
+							}
+						</style>
+						<div class="well">
 							<dl class="dl-horizontal">
 								<dt>Name:</dt> <dd><span id="tower-details-name"></span></dd>
 								<dt>Total PG:</dt> <dd><i class="fa fa-power-off"></i> <span id="tower-details-pg"></span></dd>
 								<dt>Total CPU:</dt> <dd><i class="fa fa-cog"></i> <span id="tower-details-cpu"></span></dd> <br />
 
+								<dt>Fuel:</dt> <dd> <span id="tower-details-fuel-monthly"></span>s<br />
+													<span id="tower-details-fuel-volume"></span>m3 of <span id="tower-details-fuel-volume-max"></span>m3</dd><br />
+
+								<dt>Stront:</dt> <dd> <span id="tower-details-stront-hourly"></span> Per Hour<br />
+													  <span id="tower-details-stront-volume"></span>m3 of <span id="tower-details-stront-volume-max"></span>m3</dd><br />
+
 								<dt>EM Resists:</dt> <dd><i class="icon-resist em"></i> <span id="tower-details-resonance-em"></span>%</dd>
 								<dt>Thermal Resists:</dt> <dd><i class="icon-resist thermal"></i> <span id="tower-details-resonance-thermal"></span>%</dd>
 								<dt>Kinetic Resists:</dt> <dd><i class="icon-resist kinetic"></i> <span id="tower-details-resonance-kinetic"></span>%</dd>
-								<dt>Explosive Resists:</dt> <dd><i class="icon-resist explosive"></i> <span id="tower-details-resonance-explosive"></span>%</dd>
+								<dt>Explosive Resists:</dt> <dd><i class="icon-resist explosive"></i> <span id="tower-details-resonance-explosive"></span>%</dd> <br />
+
+								<dt>Effective Hitpoints:</dt> <dd><span id="tower-details-hitpoints"></span> EHP (based on lowest resist)</dd>
+								<dt>Base Shield HP:</dt> <dd><span id="tower-hp-shield"></span> hp</dd>
+								<dt>Base Armor HP:</dt> <dd><span id="tower-hp-armor"></span> hp</dd>
+								<dt>Base Structure HP:</dt> <dd><span id="tower-hp-structure"></span> hp</dd>
+
 							</dl>
 						</div>
 					</div>

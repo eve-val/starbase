@@ -40,6 +40,7 @@ var paths = {
 			settings.bower + 'fontawesome/css/font-awesome.css',
 			settings.bower + 'select2/select2.css',
 			settings.bower + 'select2-bootstrap-css/select2-bootstrap.css',
+			settings.bower + 'seiyria-bootstrap-slider/css/bootstrap-slider.css',
 			settings.private + settings.css + '**/*.css',
 		],
 		'js': [
@@ -47,6 +48,8 @@ var paths = {
 			settings.bower + 'modernizr/modernizr.js',
 			settings.bower + 'bootstrap/dist/js/bootstrap.js',
 			settings.bower + 'select2/select2.js',
+			settings.bower + 'seiyria-bootstrap-slider/js/bootstrap-slider.js',
+			settings.bower + 'jquery-bridget/jquery.bridget.js',
 			settings.private + settings.js + 'util.js',
 			settings.private + settings.js + 'static.js',
 			settings.private + settings.js + 'model.js',

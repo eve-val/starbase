@@ -80,7 +80,7 @@ Model = (function ($, tower_static) {
 		function towerById(id) {
 			for (var idx in self.static_data['towers']) {
 				if (self.static_data['towers'][idx]['id'] == id) {
-					console.log('found tower: ', self.static_data['towers'][idx]);
+					//console.log('found tower: ', self.static_data['towers'][idx]);
 					return self.static_data['towers'][idx]['name'];
 				}
 			}
@@ -269,12 +269,34 @@ Model = (function ($, tower_static) {
 	Tower.prototype.isModObsolete = function(mod_name) {
 		var mod = this.static_data['mods'][mod_name];
 		var obsolete_groups = {
-			'Tracking Array': true,
+			'Tracking Array': true
 		};
 		if (mod['group'] in obsolete_groups) {
 			return true;
 		}
 		return false;
+	}
+
+	Tower.prototype.calcTowerHP = function() {
+		var tt = this.static_data['towers'][this.type]
+		var base_hp = tt.hp;
+		var resonances = this.getResonances();
+
+		var low_resonance = 0;
+
+		for (var type in resonances) {
+			if(resonances[type] > low_resonance)
+				low_resonance = resonances[type];
+		}
+
+		var effective_hp = base_hp.shield / low_resonance + base_hp.armor + base_hp.structure;
+
+		return {
+			"effective": Math.floor(effective_hp),
+			"shield": base_hp.shield,
+			"armor": base_hp.armor,
+			"structure": base_hp.structure
+		};
 	}
 
 	Tower.prototype.update = function(cb) {

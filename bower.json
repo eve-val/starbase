@@ -6,7 +6,8 @@
 		"fontawesome": "~4.2.0",
 		"modernizr": "~2.8.0",
 		"select2": "~3.5.0",
-		"select2-bootstrap-css": "~1.4.0"
+		"select2-bootstrap-css": "~1.4.0",
+	    "seiyria-bootstrap-slider": "~4.3.0"
 	},
 	"devDependencies": {
 		"qunit": "~1.16.0"

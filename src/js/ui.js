@@ -1,6 +1,12 @@
 App = (function($, model) {
 	var tower = null;
 
+	var fuel_interval_map = {
+		1:"Hour",
+		2:"Day",
+		3:"Week"
+	}
+
 	function update_tower_types() {
 		var show_faction = $('#tower-type-show-faction').is(':checked');
 		$('#tower-type').empty();
@@ -32,6 +38,8 @@ App = (function($, model) {
 		$('#tower-details-resonance-thermal').text(convertToResistance(resonances.thermal));
 		$('#tower-details-resonance-explosive').text(convertToResistance(resonances.explosive));
 
+
+
 		var pg_left = $('#tower-details-pg-left');
 		pg_left.text(number_format(tower.getPower()));
 		if (tower.getPower() >= 0) {
@@ -48,6 +56,10 @@ App = (function($, model) {
 			cpu_left.addClass('danger').removeClass('success');
 		}
 
+		calc_effective_hp();
+
+		update_fuel_block_calc();
+
 		var e_modules = $('#tower-details-modules');
 		e_modules.empty();
 
@@ -58,7 +70,7 @@ App = (function($, model) {
 			var m = mods[idx];
 			textBuild[i++] = "<tr>";
 				textBuild[i++] = "<td>"+m.name+"</td>";
-				textBuild[i++] = '<td><label class="label label-default">' + m.count + '</label></td>';
+				textBuild[i++] = '<td><label class="label label-default" style="top: 5px;position: relative;">' + m.count + '</label></td>';
 				textBuild[i++] = "<td>"+number_format(m.power)+"</td>";
 				textBuild[i++] = "<td>"+number_format(m.cpu)+"</td>";
 				textBuild[i++] = "<td>";
@@ -81,15 +93,6 @@ App = (function($, model) {
 		});
 	}
 
-	function set_tower_type() {
-		tower.setType($('#tower-type').val());
-	}
-
-	function init_tower_types() {
-		$('#tower-type-show-faction').change(update_tower_types);
-		$('#tower-type-set').click(set_tower_type);
-		update_tower_types();
-	}
 
 	function update_mod_picker() {
 		var e_type = $('#mod-picker-type');
@@ -103,6 +106,8 @@ App = (function($, model) {
 
 		var sel = e_type.val();
 
+		var moduleBuild = {};
+
 		e_type.empty();
 		for (var idx in model.data.mods) {
 			var m = model.data.mods[idx];
@@ -115,12 +120,32 @@ App = (function($, model) {
 			if (!show_faction && model.data.mod(m).faction) {
 				continue;
 			}
-			var opts = {'text': m};
-			if (m == sel) {
-				opts['selected'] = 'selected';
+
+			m = model.data.mod(m);
+
+			if (typeof moduleBuild[m.group] === 'undefined')
+				moduleBuild[m.group] = [];
+
+			moduleBuild[m.group].push(m);
+		}
+
+		for (var group in moduleBuild) {
+			var groupBuild = "<optgroup label='"+group+"'>";
+			for (var mod in moduleBuild[group]) {
+
+				var m = moduleBuild[group][mod];
+				var opts = {'text': m.name};
+
+				if (m.name == sel) {
+					opts['selected'] = 'selected';
+				}
+
+				var e = $('<option />', opts);
+				groupBuild += e.wrap('<div>').parent().html();
 			}
-			var e = $('<option />', opts);
-			e_type.append(e);
+
+			groupBuild += "</optgroup>";
+			e_type.append(groupBuild);
 		}
 	}
 
@@ -130,6 +155,17 @@ App = (function($, model) {
 
 	function add_mod() {
 		tower.add($('#mod-picker-type').val());
+	}
+
+	function set_tower_type() {
+		tower.setType($('#tower-type').val());
+	}
+
+	function init_tower_types() {
+		$('#tower-type-show-faction').change(update_tower_types);
+		$('#tower-type-set').click(set_tower_type);
+		$('#tower-type-sov').click(tower_updated);
+		update_tower_types();
 	}
 
 	function init_mod_picker() {
@@ -163,12 +199,142 @@ App = (function($, model) {
 		$(document).ready(function() {
 			$("#tower-type, #mod-picker-type").select2();
 		});
+
+		// setup fuel sliders:
+
+
+		$("#tower-fuel-interval").slider({
+			step: 1,
+			min: 1,
+			max: 3,
+			formatter: function(value) {
+				return fuel_interval_map[value];
+			}
+		});
+		$("#tower-fuel-interval").on("change", function(slider) {
+			update_fuel_block_slider();
+			$("#tower-fuel-value").slider()
+			$("#tower-fuel-interval-text").text(fuel_interval_map[slider.value]+'s');
+		});
+
+		$("#tower-stront-timer").slider({
+			step: 1,
+			min: 1,
+			max: 55,
+			formatter: function(value) {
+				return value + ' Hours';
+			}
+		});
+		$("#tower-stront-timer").on("change", function(slider) {
+			update_stront_calc();
+			$("#tower-stront-timer-text").text(slider.value+' Hours');
+		});
+
+		update_fuel_block_slider()
+
+		//$("#tower-fuel-slider").slider({step: 20000, min: 0, max: 200000});
+	}
+
+	function update_fuel_block_slider() {
+		var max = 0;
+		var slider_val = $("#tower-fuel-interval").slider('getValue');
+
+		if (slider_val === 1) {
+			max = 24;
+		}
+		else if(slider_val === 2) {
+			max = 49;
+		}
+		else {
+			max = 7;
+		}
+
+		$("#tower-fuel-value").slider({
+			step: 1,
+			min: 1,
+			value: 1,
+			max: max,
+			formatter: function(value) {
+				return '# of ' + fuel_interval_map[slider_val] + 's: ' + value;
+			}
+		});
+		$("#tower-fuel-value").slider('setValue',1);
+		$("#tower-fuel-value").off('change').on("change", function(slider) {
+			$("#tower-fuel-value-text").text((typeof slider.value === 'undefined' ? '1' : slider.value) + ' ' + fuel_interval_map[slider_val] + (slider.value > 1 ? 's' : ''));
+			update_fuel_block_calc();
+		});
+		$("#tower-fuel-value").trigger('change');
+		update_fuel_block_calc();
+	}
+
+	function update_fuel_block_calc() {
+
+		var tt = model.data.tower(tower.type);
+
+		var duration = $("#tower-fuel-interval").slider('getValue');
+		var tempVal = $("#tower-fuel-value").slider('getValue')
+		var value = (typeof tempVal === 'number' ? tempVal : '1');
+
+		var hours = 1;
+		if (duration === 1) {
+			hours = value;
+		}
+		else if(duration === 2) {
+			hours = value * 24;
+		}
+		else {
+			hours = value * 7 * 24;
+		}
+
+		// Monthly Fuel Calc
+		var e_sov = $('#tower-type-sov');
+		var is_sov = e_sov.is(':checked');
+		var fuel = tower.getFuelConsumption('online', hours, is_sov);
+
+		for (var name in fuel) {
+			$('#tower-details-fuel-volume').text(number_format(fuel[name] * 5));
+			$('#tower-details-fuel-volume-max').text(number_format(tt.fuelbays['online']));
+			$('#tower-details-fuel-monthly').text(number_format(fuel[name]) + ' ' + name);
+		}
+	}
+
+	function update_stront_calc() {
+
+		var tt = model.data.tower(tower.type);
+
+		var duration = $("#tower-fuel-interval").slider('getValue');
+		var tempVal = $("#tower-stront-timer").slider('getValue')
+		var value = (typeof tempVal === 'number' ? tempVal : '1');
+
+		// Monthly Fuel Calc
+		var e_sov = $('#tower-type-sov');
+		var is_sov = e_sov.is(':checked');
+		var stront = tower.getFuelConsumption('reinforce', 1, is_sov);
+
+		for (var name in stront) {
+			$('#tower-details-stront-volume').text(number_format(stront[name] * value * 3));
+			$('#tower-details-stront-volume-max').text(number_format(tt.fuelbays['reinforce']));
+			$('#tower-details-stront-hourly').text(number_format(stront[name]) + ' ' + name);
+		}
+	}
+
+	function calc_effective_hp() {
+		var hp = tower.calcTowerHP();
+
+		$('#tower-details-hitpoints').text(number_format(hp.effective));
+		$('#tower-hp-shield').text(number_format(hp.shield));
+		$('#tower-hp-armor').text(number_format(hp.armor));
+		$('#tower-hp-structure').text(number_format(hp.structure));
 	}
 
 	function tower_updated() {
 		update_tower_details();
 		update_tower_export();
 		update_mod_picker();
+
+		update_fuel_block_calc();
+		update_stront_calc();
+
 		update_fragment();
 	}
 
@@ -188,6 +354,9 @@ App = (function($, model) {
 		init_actions();
 
 		tower.update(tower_updated);
+
+		update_fuel_block_calc();
+		update_stront_calc();
 
 		if (!window.location.hash || !tower.importFromFragment(window.location.hash.substring(1))) {
 			set_tower_type();
